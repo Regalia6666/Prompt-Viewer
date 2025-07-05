@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Viewer</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 24px;
+            background-color: #ff884d; /* ダークな背景色 */
+            color: #e0e0e0; /* 基本の文字色 */
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #1e1e1e; /* コンテナの背景色 */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+        }
+        h1 {
+            text-align: center;
+            color: #f5f5f5; /* 見出しの文字色 */
+        }
+        h1 a {
+            color: #64b5f6; /* 青文字 */
+            text-decoration: underline; /* 下線 */
+        }
+        h1 a:hover {
+            text-decoration: none; /* ホバーで下線を消す */
+        }
+        .drag-drop-area {
+            width: 100%;
+            height: 150px;
+            border: 2px dashed #4a90e2; /* ボーダー色を明るい青に */
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            background-color: #2c3e50; /* 背景色をダークな青系に */
+            color: #a9cce3; /* テキスト色を明るく */
+            text-align: center;
+            transition: background-color 0.2s;
+        }
+        .drag-drop-area:hover {
+            background-color: #34495e; /* ホバー効果 */
+        }
+        .drag-drop-area img {
+            max-width: 100%;
+            max-height: 100%;
+            position: absolute;
+        }
+        .result-area {
+            border: 1px solid #444; /* ボーダーを濃いグレーに */
+            margin-top: 5px;
+            padding: 12px;
+            background-color: #2a2a2a; /* 背景色をダークグレーに */
+            color: #e0e0e0; /* テキスト色を明るく */
+            min-height: 3em;
+            overflow-wrap: break-word;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+            line-height: 1.6; /* 行間を調整 */
+            white-space: pre-wrap;
+        }
+        .result-area:hover {
+            background-color: #3a3a3a;
+        }
+        /* --- ▼ここから追加・修正▼ --- */
+        .translation-area {
+            border: 1px solid #64b5f6; /* 翻訳結果は青い枠線 */
+            margin-top: 5px;
+            padding: 12px;
+            background-color: #252525; /* 少し違う背景色 */
+            color: #c0c0c0;
+            min-height: 3em;
+            overflow-wrap: break-word;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            font-style: italic; /* 斜体で区別 */
+            display: none; /* 初期状態は非表示 */
+        }
+        .translation-area:hover {
+            background-color: #353535;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+            display: flex; /* Flexboxで要素を横並び */
+            justify-content: center;
+            align-items: center;
+        }
+        .translate-control {
+            margin-right: 20px; /* ボタンとの間隔 */
+            color: #e0e0e0;
+            display: flex;
+            align-items: center;
+        }
+        .translate-control label {
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        /* --- ▲ここまで追加・修正▲ --- */
+        .copy-btn {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #27ae60; /* 少し明るい緑 */
+            border: none;
+            color: white;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        .copy-btn:hover:not(:disabled) {
+            background-color: #2ecc71;
+        }
+        .copy-btn:disabled {
+            background-color: #555;
+            color: #999;
+            cursor: not-allowed;
+        }
+        .clear-link {
+            cursor: pointer;
+            text-decoration: underline;
+            color: #64b5f6; /* リンク色を明るい青に */
+            margin-left: 15px;
+        }
+        .popup-hidden {
+            display: none;
+        }
+        .popup-visible {
+            display: block;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #27ae60; /* ボタンと色を合わせる */
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6); /* 影を強く */
+        }
+        p {
+            margin: 16px 0 5px 0;
+            font-weight: bold;
+            color: #bbbbbb; /* ラベルの文字色 */
+        }
+    </style>
+</head>
+<body>
+    <div id="popup" class="popup-hidden">Copied to clipboard</div>
+    <div class="container">
+        <h1>Prompt Viewer powered by <a href="https://x.com/Regalia6666" target="_blank" rel="noopener noreferrer">Regalia</a></h1>
+        <div class="drag-drop-area" id="dragDropArea">
+            <span id="dragDropText">Drag & drop an image here or click to select</span>
+            <img id="uploadedImage" src="" alt="Uploaded image" style="display:none;">
+            <input type="file" id="fileInput" style="display:none;" accept="image/png,image/webp,image/jpeg">
+        </div>
+
+        <p>Info</p>
+        <div class="result-area" id="fileInfoArea"></div>
+
+        <p>Prompt</p>
+        <div class="result-area" id="promptArea"></div>
+        <!-- ▼追加: Prompt翻訳表示エリア -->
+        <div class="translation-area" id="promptTranslationArea" title="クリックして翻訳をコピー"></div>
+
+        <p>Negative prompt</p>
+        <div class="result-area" id="negativePromptArea"></div>
+        <!-- ▼追加: Negative Prompt翻訳表示エリア -->
+        <div class="translation-area" id="negativeTranslationArea" title="クリックして翻訳をコピー"></div>
+
+        <p>Other</p>
+        <div class="result-area" id="otherArea"></div>
+
+        <div class="controls">
+            <!-- ▼追加: 翻訳オンオフ機能 -->
+            <div class="translate-control">
+                <input type="checkbox" id="translateCheckbox">
+                <label for="translateCheckbox">日本語に翻訳</label>
+            </div>
+            <button class="copy-btn" id="copyBtn" disabled>Copy All</button>
+            <a id="reloadLink" class="clear-link">Clear</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chilled-lemon@0.0.6/dist/index.umd.js"></script>
+    <script>
+        const { getInfotext, getInfotextJson } = window.ChilledLemon;
+        
+        const dragDropArea = document.getElementById('dragDropArea');
+        const dragDropText = document.getElementById('dragDropText');
+        const uploadedImage = document.getElementById('uploadedImage');
+        const fileInfoArea = document.getElementById('fileInfoArea');
+        const promptArea = document.getElementById('promptArea');
+        const negativePromptArea = document.getElementById('negativePromptArea');
+        const otherArea = document.getElementById('otherArea');
+        const copyBtn = document.getElementById('copyBtn');
+        const fileInput = document.getElementById('fileInput');
+
+        // --- ▼ここから追加・修正▼ ---
+        const translateCheckbox = document.getElementById('translateCheckbox');
+        const promptTranslationArea = document.getElementById('promptTranslationArea');
+        const negativeTranslationArea = document.getElementById('negativeTranslationArea');
+
+        /**
+         * テキストをGoogle翻訳（非公式API）で翻訳する関数
+         * @param {string} text - 翻訳するテキスト
+         * @param {string} targetLang - 翻訳先の言語コード (例: 'ja')
+         * @returns {Promise<string>} 翻訳されたテキスト
+         */
+        const translateText = async (text, targetLang = 'ja') => {
+            if (!text || text === 'No information available') {
+                return 'N/A'; // 翻訳対象がない場合はN/Aを返す
+            }
+            try {
+                // Google翻訳の非公式APIエンドポイント
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const json = await response.json();
+                // 複雑なJSON構造から翻訳結果を抽出
+                const translatedText = json[0].map(item => item[0]).join('');
+                return translatedText;
+            } catch (error) {
+                console.error('Translation failed:', error);
+                return '翻訳に失敗しました。';
+            }
+        };
+
+        /**
+         * 翻訳の表示・非表示と実行を制御する関数
+         */
+        const handleTranslation = async () => {
+            if (translateCheckbox.checked) {
+                promptTranslationArea.style.display = 'block';
+                negativeTranslationArea.style.display = 'block';
+
+                // Promptの翻訳（まだ翻訳されていない場合のみ実行）
+                if (promptArea.textContent && promptArea.textContent !== 'No information available' && !promptTranslationArea.dataset.translated) {
+                    promptTranslationArea.textContent = '翻訳中...';
+                    const translation = await translateText(promptArea.textContent);
+                    promptTranslationArea.textContent = translation;
+                    promptTranslationArea.dataset.translated = 'true'; // 翻訳済みフラグを立てる
+                } else if (!promptArea.textContent || promptArea.textContent === 'No information available') {
+                    promptTranslationArea.textContent = 'N/A';
+                }
+
+                // Negative Promptの翻訳（まだ翻訳されていない場合のみ実行）
+                if (negativePromptArea.textContent && negativePromptArea.textContent !== 'No information available' && !negativeTranslationArea.dataset.translated) {
+                    negativeTranslationArea.textContent = '翻訳中...';
+                    const translation = await translateText(negativePromptArea.textContent);
+                    negativeTranslationArea.textContent = translation;
+                    negativeTranslationArea.dataset.translated = 'true'; // 翻訳済みフラグを立てる
+                } else if (!negativePromptArea.textContent || negativePromptArea.textContent === 'No information available') {
+                    negativeTranslationArea.textContent = 'N/A';
+                }
+            } else {
+                // チェックが外れたら翻訳エリアを非表示にする
+                promptTranslationArea.style.display = 'none';
+                negativeTranslationArea.style.display = 'none';
+            }
+        };
+        // --- ▲ここまで追加・修正▲ ---
+
+        const applyInfotext = async (file) => {
+            try {
+                // --- ▼ここから追加・修正▼ ---
+                // 新しい画像を読み込む際に、前の翻訳結果と状態をリセット
+                promptTranslationArea.textContent = '';
+                negativeTranslationArea.textContent = '';
+                delete promptTranslationArea.dataset.translated;
+                delete negativeTranslationArea.dataset.translated;
+                promptTranslationArea.style.display = 'none';
+                negativeTranslationArea.style.display = 'none';
+                // --- ▲ここまで追加・修正▲ ---
+
+                const arrayBuffer = await file.arrayBuffer();
+                const jsonPromise = getInfotextJson(arrayBuffer);
+                const infotextPromise = getInfotext(arrayBuffer);
+
+                const reader = new FileReader();
+                reader.onload = () => {
+                    uploadedImage.src = reader.result;
+                    uploadedImage.style.display = 'block';
+                    dragDropText.style.display = 'none';
+                    copyBtn.disabled = false;
+
+                    uploadedImage.onload = () => {
+                        const fileSizeInKB = file.size / 1024;
+                        const fileSize = fileSizeInKB > 1024 
+                            ? `${(fileSizeInKB / 1024).toFixed(2)} MB`
+                            : `${fileSizeInKB.toFixed(2)} KB`;
+                        
+                        const lastModified = new Date(file.lastModified).toLocaleString('ja-JP');
+                        
+                        fileInfoArea.innerHTML = 
+                            `px: ${uploadedImage.naturalWidth} x ${uploadedImage.naturalHeight} px<br>` +
+                            `size: ${fileSize}<br>` +
+                            `date: ${lastModified}<br>` ;
+                    };
+                };
+                reader.readAsDataURL(file);
+
+                const json = await jsonPromise;
+                promptArea.textContent = json.prompt || '情報がありません';
+                negativePromptArea.textContent = json.negativePrompt || '情報がありません';
+
+                const infotext = await infotextPromise;
+                const lines = infotext.split('\n');
+                otherArea.textContent = lines[lines.length - 1] || '情報がありません';
+                
+                // --- ▼追加: 抽出後に翻訳処理を呼び出す▼ ---
+                await handleTranslation();
+
+            } catch (err) {
+                alert("情報の読み取りに失敗しました。サポートされていないファイル形式の可能性があります。");
+                console.error(`Error reading file: ${err.message}`);
+                location.reload();
+            }
+        };
+
+        const copyTextToClipboard = (text, message) => {
+            if (!text || text === '情報がありません' || text === 'N/A' || text.includes('翻訳中')) return;
+            navigator.clipboard.writeText(text).then(() => {
+                showPopup(message);
+            }).catch(err => console.error("コピーに失敗しました:", err));
+        };
+
+        const showPopup = (text) => {
+            const popup = document.getElementById('popup');
+            popup.textContent = text;
+            popup.className = 'popup-visible';
+            setTimeout(() => { popup.className = 'popup-hidden'; }, 1500);
+        };
+
+        dragDropArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => e.target.files.length && applyInfotext(e.target.files[0]));
+
+        dragDropArea.addEventListener('dragover', (e) => e.preventDefault());
+        dragDropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.dataTransfer.files.length && applyInfotext(e.dataTransfer.files[0]);
+        });
+        
+        // --- ▼修正: 「Copy All」ボタンに翻訳結果も含めるように変更▼ ---
+        copyBtn.addEventListener('click', () => {
+            const fileInfoText = fileInfoArea.innerHTML
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<[^>]*>/g, '');
+
+            let fullText = `--- File Info ---\n${fileInfoText}\n\n--- Prompt ---\n${promptArea.textContent}`;
+            
+            // 翻訳が表示されている場合、コピー内容に含める
+            if (translateCheckbox.checked && promptTranslationArea.textContent) {
+                fullText += `\n\n--- Prompt (Japanese) ---\n${promptTranslationArea.textContent}`;
+            }
+
+            fullText += `\n\n--- Negative Prompt ---\n${negativePromptArea.textContent}`;
+
+            // 翻訳が表示されている場合、コピー内容に含める
+            if (translateCheckbox.checked && negativeTranslationArea.textContent) {
+                fullText += `\n\n--- Negative Prompt (Japanese) ---\n${negativeTranslationArea.textContent}`;
+            }
+
+            fullText += `\n\n--- Other ---\n${otherArea.textContent}`;
+            
+            copyTextToClipboard(fullText, 'すべての情報をコピーしました');
+        });
+
+        promptArea.addEventListener("click", () => copyTextToClipboard(promptArea.textContent, 'Promptをコピーしました'));
+        negativePromptArea.addEventListener("click", () => copyTextToClipboard(negativePromptArea.textContent, 'Negative promptをコピーしました'));
+        otherArea.addEventListener("click", () => copyTextToClipboard(otherArea.textContent, 'Otherの情報をコピーしました'));
+        
+        // --- ▼追加: 翻訳結果のクリックコピーと、翻訳チェックボックスのイベントリスナー▼ ---
+        promptTranslationArea.addEventListener("click", () => copyTextToClipboard(promptTranslationArea.textContent, '翻訳結果をコピーしました'));
+        negativeTranslationArea.addEventListener("click", () => copyTextToClipboard(negativeTranslationArea.textContent, '翻訳結果をコピーしました'));
+        translateCheckbox.addEventListener('change', handleTranslation);
+        
+        document.getElementById('reloadLink').addEventListener('click', () => location.reload());
+    </script>
+</body>
+</html>
