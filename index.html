@@ -74,7 +74,6 @@
         .result-area:hover {
             background-color: #3a3a3a;
         }
-        /* --- ▼ここから追加・修正▼ --- */
         .translation-area {
             border: 1px solid #64b5f6; /* 翻訳結果は青い枠線 */
             margin-top: 5px;
@@ -94,33 +93,79 @@
         .translation-area:hover {
             background-color: #353535;
         }
+        
+        .translate-control-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .translate-control-container input[type="checkbox"] {
+            display: none;
+        }
+        .translate-control-container label {
+            color: #e0e0e0;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-left: 65px;
+            font-size: 16px;
+            line-height: 30px;
+        }
+        .translate-control-container label::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 54px;
+            height: 30px;
+            background-color: #555;
+            border-radius: 15px;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .translate-control-container label::after {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 3px;
+            width: 24px;
+            height: 24px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.2s ease-in-out;
+        }
+        .translate-control-container input[type="checkbox"]:checked + label::before {
+            background-color: #27ae60;
+        }
+        .translate-control-container input[type="checkbox"]:checked + label::after {
+            transform: translateX(24px);
+        }
+
         .controls {
             text-align: center;
             margin-top: 20px;
-            display: flex; /* Flexboxで要素を横並び */
+            display: flex;
             justify-content: center;
             align-items: center;
+            gap: 15px; /* ボタン間の間隔を設定 */
         }
-        .translate-control {
-            margin-right: 20px; /* ボタンとの間隔 */
-            color: #e0e0e0;
-            display: flex;
-            align-items: center;
-        }
-        .translate-control label {
-            cursor: pointer;
-            margin-left: 5px;
-        }
-        /* --- ▲ここまで追加・修正▲ --- */
-        .copy-btn {
+
+        /* --- ▼ここから修正・追加▼ --- */
+        /* ボタンの共通スタイル */
+        .btn {
             padding: 10px 20px;
             cursor: pointer;
-            background-color: #27ae60; /* 少し明るい緑 */
             border: none;
             color: white;
             border-radius: 4px;
             font-size: 16px;
             transition: background-color 0.2s;
+            text-decoration: none; /* <a>タグで下線が出ないようにする */
+        }
+
+        /* Copyボタンのスタイル */
+        .copy-btn {
+            background-color: #27ae60; /* 緑 */
         }
         .copy-btn:hover:not(:disabled) {
             background-color: #2ecc71;
@@ -130,12 +175,16 @@
             color: #999;
             cursor: not-allowed;
         }
-        .clear-link {
-            cursor: pointer;
-            text-decoration: underline;
-            color: #64b5f6; /* リンク色を明るい青に */
-            margin-left: 15px;
+
+        /* Clearボタンのスタイル */
+        .clear-btn {
+            background-color: #c0392b; /* 赤 */
         }
+        .clear-btn:hover {
+            background-color: #e74c3c;
+        }
+        /* --- ▲ここまで修正・追加▲ --- */
+
         .popup-hidden {
             display: none;
         }
@@ -145,17 +194,17 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: #27ae60; /* ボタンと色を合わせる */
+            background-color: #27ae60;
             color: white;
             padding: 15px;
             border-radius: 5px;
             z-index: 1000;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.6); /* 影を強く */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
         }
         p {
             margin: 16px 0 5px 0;
             font-weight: bold;
-            color: #bbbbbb; /* ラベルの文字色 */
+            color: #bbbbbb;
         }
     </style>
 </head>
@@ -163,10 +212,16 @@
     <div id="popup" class="popup-hidden">Copied to clipboard</div>
     <div class="container">
         <h1>Prompt Viewer powered by <a href="https://x.com/Regalia6666" target="_blank" rel="noopener noreferrer">Regalia</a></h1>
+        
         <div class="drag-drop-area" id="dragDropArea">
             <span id="dragDropText">Drag & drop an image here or click to select</span>
             <img id="uploadedImage" src="" alt="Uploaded image" style="display:none;">
             <input type="file" id="fileInput" style="display:none;" accept="image/png,image/webp,image/jpeg">
+        </div>
+
+        <div class="translate-control-container">
+            <input type="checkbox" id="translateCheckbox">
+            <label for="translateCheckbox">日本語に翻訳</label>
         </div>
 
         <p>Info</p>
@@ -174,30 +229,25 @@
 
         <p>Prompt</p>
         <div class="result-area" id="promptArea"></div>
-        <!-- ▼追加: Prompt翻訳表示エリア -->
         <div class="translation-area" id="promptTranslationArea" title="クリックして翻訳をコピー"></div>
 
         <p>Negative prompt</p>
         <div class="result-area" id="negativePromptArea"></div>
-        <!-- ▼追加: Negative Prompt翻訳表示エリア -->
         <div class="translation-area" id="negativeTranslationArea" title="クリックして翻訳をコピー"></div>
 
         <p>Other</p>
         <div class="result-area" id="otherArea"></div>
 
+        <!-- ▼ボタンデザインを統一▼ -->
         <div class="controls">
-            <!-- ▼追加: 翻訳オンオフ機能 -->
-            <div class="translate-control">
-                <input type="checkbox" id="translateCheckbox">
-                <label for="translateCheckbox">日本語に翻訳</label>
-            </div>
-            <button class="copy-btn" id="copyBtn" disabled>Copy All</button>
-            <a id="reloadLink" class="clear-link">Clear</a>
+            <button class="btn copy-btn" id="copyBtn" disabled>Copy All</button>
+            <a id="reloadLink" class="btn clear-btn">Clear</a>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chilled-lemon@0.0.6/dist/index.umd.js"></script>
     <script>
+        // JavaScript部分は変更不要です
         const { getInfotext, getInfotextJson } = window.ChilledLemon;
         
         const dragDropArea = document.getElementById('dragDropArea');
@@ -209,31 +259,21 @@
         const otherArea = document.getElementById('otherArea');
         const copyBtn = document.getElementById('copyBtn');
         const fileInput = document.getElementById('fileInput');
-
-        // --- ▼ここから追加・修正▼ ---
         const translateCheckbox = document.getElementById('translateCheckbox');
         const promptTranslationArea = document.getElementById('promptTranslationArea');
         const negativeTranslationArea = document.getElementById('negativeTranslationArea');
 
-        /**
-         * テキストをGoogle翻訳（非公式API）で翻訳する関数
-         * @param {string} text - 翻訳するテキスト
-         * @param {string} targetLang - 翻訳先の言語コード (例: 'ja')
-         * @returns {Promise<string>} 翻訳されたテキスト
-         */
         const translateText = async (text, targetLang = 'ja') => {
             if (!text || text === 'No information available') {
-                return 'N/A'; // 翻訳対象がない場合はN/Aを返す
+                return 'N/A';
             }
             try {
-                // Google翻訳の非公式APIエンドポイント
                 const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
                 const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const json = await response.json();
-                // 複雑なJSON構造から翻訳結果を抽出
                 const translatedText = json[0].map(item => item[0]).join('');
                 return translatedText;
             } catch (error) {
@@ -242,56 +282,46 @@
             }
         };
 
-        /**
-         * 翻訳の表示・非表示と実行を制御する関数
-         */
         const handleTranslation = async () => {
             if (translateCheckbox.checked) {
                 promptTranslationArea.style.display = 'block';
                 negativeTranslationArea.style.display = 'block';
 
-                // Promptの翻訳（まだ翻訳されていない場合のみ実行）
-                if (promptArea.textContent && promptArea.textContent !== 'No information available' && !promptTranslationArea.dataset.translated) {
+                if (promptArea.textContent && promptArea.textContent !== '情報がありません' && !promptTranslationArea.dataset.translated) {
                     promptTranslationArea.textContent = '翻訳中...';
                     const translation = await translateText(promptArea.textContent);
                     promptTranslationArea.textContent = translation;
-                    promptTranslationArea.dataset.translated = 'true'; // 翻訳済みフラグを立てる
-                } else if (!promptArea.textContent || promptArea.textContent === 'No information available') {
+                    promptTranslationArea.dataset.translated = 'true';
+                } else if (!promptArea.textContent || promptArea.textContent === '情報がありません') {
                     promptTranslationArea.textContent = 'N/A';
                 }
 
-                // Negative Promptの翻訳（まだ翻訳されていない場合のみ実行）
-                if (negativePromptArea.textContent && negativePromptArea.textContent !== 'No information available' && !negativeTranslationArea.dataset.translated) {
+                if (negativePromptArea.textContent && negativePromptArea.textContent !== '情報がありません' && !negativeTranslationArea.dataset.translated) {
                     negativeTranslationArea.textContent = '翻訳中...';
                     const translation = await translateText(negativePromptArea.textContent);
                     negativeTranslationArea.textContent = translation;
-                    negativeTranslationArea.dataset.translated = 'true'; // 翻訳済みフラグを立てる
-                } else if (!negativePromptArea.textContent || negativePromptArea.textContent === 'No information available') {
+                    negativeTranslationArea.dataset.translated = 'true';
+                } else if (!negativePromptArea.textContent || negativePromptArea.textContent === '情報がありません') {
                     negativeTranslationArea.textContent = 'N/A';
                 }
             } else {
-                // チェックが外れたら翻訳エリアを非表示にする
                 promptTranslationArea.style.display = 'none';
                 negativeTranslationArea.style.display = 'none';
             }
         };
-        // --- ▲ここまで追加・修正▲ ---
 
         const applyInfotext = async (file) => {
             try {
-                // --- ▼ここから追加・修正▼ ---
-                // 新しい画像を読み込む際に、前の翻訳結果と状態をリセット
                 promptTranslationArea.textContent = '';
                 negativeTranslationArea.textContent = '';
                 delete promptTranslationArea.dataset.translated;
                 delete negativeTranslationArea.dataset.translated;
                 promptTranslationArea.style.display = 'none';
                 negativeTranslationArea.style.display = 'none';
-                // --- ▲ここまで追加・修正▲ ---
 
                 const arrayBuffer = await file.arrayBuffer();
-                const jsonPromise = getInfotextJson(arrayBuffer);
                 const infotextPromise = getInfotext(arrayBuffer);
+                const jsonPromise = getInfotextJson(arrayBuffer);
 
                 const reader = new FileReader();
                 reader.onload = () => {
@@ -316,15 +346,48 @@
                 };
                 reader.readAsDataURL(file);
 
-                const json = await jsonPromise;
-                promptArea.textContent = json.prompt || '情報がありません';
-                negativePromptArea.textContent = json.negativePrompt || '情報がありません';
-
                 const infotext = await infotextPromise;
-                const lines = infotext.split('\n');
-                otherArea.textContent = lines[lines.length - 1] || '情報がありません';
+
+                if (infotext) {
+                    const lines = infotext.split('\n');
+                    const negPromptIndex = lines.findIndex(line => line.startsWith('Negative prompt:'));
+                    const paramsIndex = lines.findIndex(line => line.startsWith('Steps:') || line.startsWith('Size:') || line.startsWith('Seed:'));
+
+                    if (negPromptIndex !== -1 || paramsIndex !== -1) {
+                        let promptLines, negativePromptLines = [], otherLines = [];
+
+                        if (negPromptIndex !== -1) {
+                            promptLines = lines.slice(0, negPromptIndex);
+                            const endOfNegative = (paramsIndex > negPromptIndex) ? paramsIndex : lines.length;
+                            negativePromptLines = lines.slice(negPromptIndex, endOfNegative);
+                            if (paramsIndex > negPromptIndex) {
+                                otherLines = lines.slice(paramsIndex);
+                            }
+                        } else {
+                            promptLines = lines.slice(0, paramsIndex);
+                            otherLines = lines.slice(paramsIndex);
+                        }
+
+                        if (negativePromptLines.length > 0) {
+                            negativePromptLines[0] = negativePromptLines[0].replace(/^Negative prompt:\s*/, '');
+                        }
+
+                        promptArea.textContent = promptLines.join('\n').trim() || '情報がありません';
+                        negativePromptArea.textContent = negativePromptLines.join('\n').trim() || '情報がありません';
+                        otherArea.textContent = otherLines.join('\n').trim() || '情報がありません';
+
+                    } else {
+                        const json = await jsonPromise;
+                        promptArea.textContent = json.prompt || '情報がありません';
+                        negativePromptArea.textContent = json.negativePrompt || '情報がありません';
+                        otherArea.textContent = lines[lines.length - 1] || '情報がありません';
+                    }
+                } else {
+                    promptArea.textContent = '情報がありません';
+                    negativePromptArea.textContent = '情報がありません';
+                    otherArea.textContent = '情報がありません';
+                }
                 
-                // --- ▼追加: 抽出後に翻訳処理を呼び出す▼ ---
                 await handleTranslation();
 
             } catch (err) {
@@ -357,7 +420,6 @@
             e.dataTransfer.files.length && applyInfotext(e.dataTransfer.files[0]);
         });
         
-        // --- ▼修正: 「Copy All」ボタンに翻訳結果も含めるように変更▼ ---
         copyBtn.addEventListener('click', () => {
             const fileInfoText = fileInfoArea.innerHTML
                 .replace(/<br\s*\/?>/gi, '\n')
@@ -365,14 +427,12 @@
 
             let fullText = `--- File Info ---\n${fileInfoText}\n\n--- Prompt ---\n${promptArea.textContent}`;
             
-            // 翻訳が表示されている場合、コピー内容に含める
             if (translateCheckbox.checked && promptTranslationArea.textContent) {
                 fullText += `\n\n--- Prompt (Japanese) ---\n${promptTranslationArea.textContent}`;
             }
 
             fullText += `\n\n--- Negative Prompt ---\n${negativePromptArea.textContent}`;
 
-            // 翻訳が表示されている場合、コピー内容に含める
             if (translateCheckbox.checked && negativeTranslationArea.textContent) {
                 fullText += `\n\n--- Negative Prompt (Japanese) ---\n${negativeTranslationArea.textContent}`;
             }
@@ -385,8 +445,6 @@
         promptArea.addEventListener("click", () => copyTextToClipboard(promptArea.textContent, 'Promptをコピーしました'));
         negativePromptArea.addEventListener("click", () => copyTextToClipboard(negativePromptArea.textContent, 'Negative promptをコピーしました'));
         otherArea.addEventListener("click", () => copyTextToClipboard(otherArea.textContent, 'Otherの情報をコピーしました'));
-        
-        // --- ▼追加: 翻訳結果のクリックコピーと、翻訳チェックボックスのイベントリスナー▼ ---
         promptTranslationArea.addEventListener("click", () => copyTextToClipboard(promptTranslationArea.textContent, '翻訳結果をコピーしました'));
         negativeTranslationArea.addEventListener("click", () => copyTextToClipboard(negativeTranslationArea.textContent, '翻訳結果をコピーしました'));
         translateCheckbox.addEventListener('change', handleTranslation);
