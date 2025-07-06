@@ -22,11 +22,6 @@ Stable Diffusionなどで生成されたAI画像に含まれるプロンプト�
 3.  画面中央のエリアに、情報を確認したい画像をドラッグ＆ドロップするか、エリアをクリックしてファイルを選択します。
 4.  画像から抽出された情報が自動的に表示されます。必要に応じて翻訳やコピー機能をご利用ください。
 
-## 🛠️ 使用技術 (Technology Stack)
-
--   **HTML / CSS / JavaScript (Vanilla JS)**
--   **[chilled-lemon](https://github.com/huchenme/chilled-lemon)**: AUTOMATIC1111氏のweb-uiで生成された画像のメタデータ（infotext）を解析するためのJavaScriptライブラリ。
-
 ## 👤 作者 (Author)
 
 -   [**Regalia**](https://x.com/Regalia6666)
