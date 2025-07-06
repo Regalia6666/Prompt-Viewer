@@ -1,3 +1,5 @@
+<img width="1716" height="818" alt="Image" src="https://github.com/user-attachments/assets/0abdac22-6051-4c07-b280-814c8a79a9d7" />
+
 # Prompt Viewer
 
 Stable Diffusionなどで生成されたAI画像に含まれるプロンプトや生成情報を、手軽に確認できるWebツールです。  
